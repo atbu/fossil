@@ -49,3 +49,43 @@ func GenerateAudioLeaderboard(audioRecords []records.AudioRecord) []AudioLeaderb
 
 	return leaderboard
 }
+
+type ArtistLeaderboardEntry struct {
+	ArtistName     string
+	NumberOfTracks int
+	TimePlayed     time.Duration
+}
+
+func GenerateArtistLeaderboard(audioRecords []records.AudioRecord) []ArtistLeaderboardEntry {
+	leaderboard := GenerateAudioLeaderboard(audioRecords)
+
+	artists := make(map[string][]int64)
+
+	for _, entry := range leaderboard {
+		artists[entry.ArtistName] = append(artists[entry.ArtistName], entry.TimePlayed.Milliseconds())
+	}
+
+	artistLeaderboard := make([]ArtistLeaderboardEntry, 0, len(leaderboard)/2)
+	for artist, trackDurations := range artists {
+		numberOfTracks := len(trackDurations)
+
+		var durationSum int64 = 0
+		for _, duration := range trackDurations {
+			durationSum += duration
+		}
+
+		entry := ArtistLeaderboardEntry{
+			ArtistName:     artist,
+			NumberOfTracks: numberOfTracks,
+			TimePlayed:     time.Duration(durationSum) * time.Millisecond,
+		}
+
+		artistLeaderboard = append(artistLeaderboard, entry)
+	}
+
+	sort.Slice(artistLeaderboard, func(i, j int) bool {
+		return artistLeaderboard[i].TimePlayed > artistLeaderboard[j].TimePlayed
+	})
+
+	return artistLeaderboard
+}

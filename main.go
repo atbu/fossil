@@ -105,13 +105,23 @@ func main() {
 		leaderboard := statistics.GenerateAudioLeaderboard(audioRecords)
 
 		if len(leaderboard) > 0 {
-			fmt.Printf("Lifetime leaderboard:\n")
+			fmt.Printf("Lifetime track leaderboard:\n")
 			for index, entry := range leaderboard {
 				duration := entry.TimePlayed.Round(time.Second)
 				fmt.Printf("%d. %s - %s: %s\n", index+1, entry.TrackName, entry.ArtistName, duration)
 			}
 		} else {
-			fmt.Println("No data found.")
+			fmt.Println("No track data found.")
+		}
+
+		artistLeaderboard := statistics.GenerateArtistLeaderboard(audioRecords)
+
+		if len(artistLeaderboard) > 0 {
+			fmt.Printf("Lifetime artist leaderboard:\n")
+			for index, entry := range artistLeaderboard {
+				duration := entry.TimePlayed.Round(time.Second)
+				fmt.Printf("%d. %s: %s (%d songs)\n", index+1, entry.ArtistName, duration, entry.NumberOfTracks)
+			}
 		}
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/atbu/fossil/records"
+
+	_ "modernc.org/sqlite" // Pure Go driver (no CGO needed)
 )
 
 func InitDB(dbPath string) (*sql.DB, error) {
@@ -64,7 +66,6 @@ func BulkInsertAudioRecords(db *sql.DB, audioRecords []records.AudioRecord) (int
 
 	stmt, err := tx.Prepare(`
 		INSERT OR IGNORE INTO audio_records (
-			id,
 			ts,
 			platform,
 			ms_played,

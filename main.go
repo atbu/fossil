@@ -5,10 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"sort"
-	"time"
 
-	"github.com/atbu/fossil/song"
+	"github.com/atbu/fossil/records"
 )
 
 func main() {
@@ -25,16 +23,9 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Successfully loaded %d records.\n", len(songs))
-
-	leaderboard := generateSongLeaderboard(songs)
-
-	for index, entry := range leaderboard {
-		duration := entry.MsPlayed.Round(time.Second)
-		fmt.Printf("%d. %s - %s: %s\n", index, entry.TrackName, entry.ArtistName, duration)
-	}
 }
 
-func parseAudioStreamingHistoryFile(filePath string) ([]song.Song, error) {
+func parseAudioStreamingHistoryFile(filePath string) ([]records.AudioRecord, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
@@ -51,10 +42,10 @@ func parseAudioStreamingHistoryFile(filePath string) ([]song.Song, error) {
 		return nil, fmt.Errorf("expected opening array bracket '[', got %v", t)
 	}
 
-	songs := make([]song.Song, 0, 20000)
+	songs := make([]records.AudioRecord, 0, 20000)
 
 	for decoder.More() {
-		var song song.Song
+		var song records.AudioRecord
 		if err := decoder.Decode(&song); err != nil {
 			return nil, fmt.Errorf("error decoding object: %w", err)
 		}
@@ -66,47 +57,4 @@ func parseAudioStreamingHistoryFile(filePath string) ([]song.Song, error) {
 	}
 
 	return songs, nil
-}
-
-type SongLeaderboardEntry struct {
-	TrackName  string
-	ArtistName string
-	MsPlayed   time.Duration
-}
-
-func generateSongLeaderboard(songs []song.Song) []SongLeaderboardEntry {
-	type trackKey struct {
-		Track  string
-		Artist string
-	}
-
-	entries := make(map[trackKey]int64, len(songs)/10)
-
-	for _, song := range songs {
-		if song.MasterMetadataTrackName == "" || song.MasterMetadataAlbumArtistName == "" {
-			continue
-		}
-
-		key := trackKey{
-			Track:  song.MasterMetadataTrackName,
-			Artist: song.MasterMetadataAlbumArtistName,
-		}
-
-		entries[key] += song.MsPlayed
-	}
-
-	leaderboard := make([]SongLeaderboardEntry, 0, len(entries))
-	for key, ms := range entries {
-		leaderboard = append(leaderboard, SongLeaderboardEntry{
-			TrackName:  key.Track,
-			ArtistName: key.Artist,
-			MsPlayed:   time.Duration(ms) * time.Millisecond,
-		})
-	}
-
-	sort.Slice(leaderboard, func(i, j int) bool {
-		return leaderboard[i].MsPlayed > leaderboard[j].MsPlayed
-	})
-
-	return leaderboard
 }

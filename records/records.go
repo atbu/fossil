@@ -1,8 +1,8 @@
-package song
+package records
 
 import "time"
 
-type Song struct {
+type AudioRecord struct {
 	Ts                            time.Time `json:"ts"`
 	Platform                      string    `json:"platform"`
 	MsPlayed                      int64     `json:"ms_played"`

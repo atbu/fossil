@@ -24,6 +24,6 @@ type Song struct {
 	Shuffle                       bool      `json:"shuffle"`
 	Skipped                       bool      `json:"skipped"`
 	Offline                       bool      `json:"offline"`
-	OfflineTimestamp              time.Time `json:"offline_timestamp"`
+	OfflineTimestamp              int64     `json:"offline_timestamp"`
 	IncognitoMode                 bool      `json:"incognito_mode"`
 }

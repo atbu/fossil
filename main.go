@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"time"
 
 	fossildb "github.com/atbu/fossil/db"
 	"github.com/atbu/fossil/records"
+	"github.com/atbu/fossil/statistics"
 )
 
 func main() {
@@ -51,6 +54,39 @@ func main() {
 		}
 
 		fmt.Printf("Inserted %d rows and skipped %d rows.\n", totalInserted, skipped)
+	case "year-leaderboard":
+		yearLeaderboardCmd := flag.NewFlagSet("year-leaderboard", flag.ExitOnError)
+		yearLeaderboardCmd.Parse(os.Args[2:])
+
+		if yearLeaderboardCmd.NArg() < 1 {
+			fmt.Println("Error: missing year")
+			fmt.Println("Usage: fossil year-leaderboard <year>")
+			os.Exit(1)
+		}
+
+		year := yearLeaderboardCmd.Arg(0)
+		yearInt, err := strconv.Atoi(year)
+		if err != nil {
+			fmt.Println("Error: failed to parse year %s", year)
+			os.Exit(1)
+		}
+
+		audioRecords, err := fossildb.GetAudioRecordsByYear(db, yearInt)
+		if err != nil {
+			panic(err)
+		}
+
+		leaderboard := statistics.GenerateAudioLeaderboard(audioRecords)
+
+		if len(leaderboard) > 0 {
+			fmt.Printf("Year leaderboard for %s:\n", year)
+			for index, entry := range leaderboard {
+				duration := entry.TimePlayed.Round(time.Second)
+				fmt.Printf("%d. %s - %s: %s\n", index, entry.TrackName, entry.ArtistName, duration)
+			}
+		} else {
+			fmt.Printf("No data found for year %s.\n", year)
+		}
 	}
 
 }

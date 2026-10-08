@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/atbu/fossil/records"
 	"github.com/atbu/fossil/utils"
@@ -207,4 +208,19 @@ func GetAudioRecordsByYear(db *sql.DB, year int) ([]records.AudioRecord, error) 
 	}
 
 	return audioRecords, nil
+}
+
+func GetTotalListeningTime(db *sql.DB) (time.Duration, error) {
+	query := `
+	SELECT COALESCE(SUM(ms_played), 0) AS total_ms FROM audio_records;
+	`
+
+	var totalMs int64
+	err := db.QueryRow(query).Scan(&totalMs)
+	if err != nil {
+		return 0, fmt.Errorf("failed to query total listening time: %w", err)
+	}
+
+	duration := time.Duration(totalMs) * time.Millisecond
+	return duration, nil
 }

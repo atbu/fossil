@@ -87,6 +87,15 @@ func main() {
 		} else {
 			fmt.Printf("No data found for year %s.\n", year)
 		}
+	case "total-listening-time":
+		totalListeningTime, err := fossildb.GetTotalListeningTime(db)
+		if err != nil {
+			panic(err)
+		}
+
+		duration := totalListeningTime.Round(time.Second)
+		days := duration.Hours() / 24.0
+		fmt.Printf("Lifetime listening time: %s (%.2f days)\n", duration, days)
 	}
 
 }

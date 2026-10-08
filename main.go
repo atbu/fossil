@@ -82,7 +82,7 @@ func main() {
 			fmt.Printf("Year leaderboard for %s:\n", year)
 			for index, entry := range leaderboard {
 				duration := entry.TimePlayed.Round(time.Second)
-				fmt.Printf("%d. %s - %s: %s\n", index, entry.TrackName, entry.ArtistName, duration)
+				fmt.Printf("%d. %s - %s: %s\n", index+1, entry.TrackName, entry.ArtistName, duration)
 			}
 		} else {
 			fmt.Printf("No data found for year %s.\n", year)

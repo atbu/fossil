@@ -67,7 +67,7 @@ func main() {
 		year := yearLeaderboardCmd.Arg(0)
 		yearInt, err := strconv.Atoi(year)
 		if err != nil {
-			fmt.Println("Error: failed to parse year %s", year)
+			fmt.Printf("Error: failed to parse year %s", year)
 			os.Exit(1)
 		}
 

@@ -1,1 +1,6 @@
 testdata/
+out/
+
+*.db
+*.db-shm
+*.db-wal

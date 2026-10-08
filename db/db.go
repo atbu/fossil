@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/atbu/fossil/records"
+	"github.com/atbu/fossil/utils"
 
 	_ "modernc.org/sqlite" // Pure Go driver (no CGO needed)
 )
@@ -125,11 +126,11 @@ func BulkInsertAudioRecords(db *sql.DB, audioRecords []records.AudioRecord) (int
 			r.AudiobookChapterTitle,
 			r.ReasonStart,
 			r.ReasonEnd,
-			boolToInt(r.Shuffle),
-			boolToInt(r.Skipped),
-			boolToInt(r.Offline),
+			utils.BoolToInt(r.Shuffle),
+			utils.BoolToInt(r.Skipped),
+			utils.BoolToInt(r.Offline),
 			r.OfflineTimestamp,
-			boolToInt(r.IncognitoMode),
+			utils.BoolToInt(r.IncognitoMode),
 		)
 		if err != nil {
 			return 0, 0, fmt.Errorf("failed to execute insert: %w", err)
@@ -152,13 +153,4 @@ func BulkInsertAudioRecords(db *sql.DB, audioRecords []records.AudioRecord) (int
 	}
 
 	return totalInserted, skippedRows, nil
-}
-
-// SQLite doesn't have a Boolean type so we have to use integers.
-// Go doesn't have a native way to convert a Boolean to an integer so here we are.
-func boolToInt(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
 }

@@ -224,3 +224,53 @@ func GetTotalListeningTime(db *sql.DB) (time.Duration, error) {
 	duration := time.Duration(totalMs) * time.Millisecond
 	return duration, nil
 }
+
+func GetAllAudioRecords(db *sql.DB) ([]records.AudioRecord, error) {
+	query := `
+	SELECT
+		ts,
+		ms_played,
+		master_metadata_track_name,
+		master_metadata_album_artist_name
+	FROM audio_records;
+	`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to all query records: %w", err)
+	}
+	defer rows.Close()
+
+	var audioRecords []records.AudioRecord
+
+	for rows.Next() {
+		var record records.AudioRecord
+
+		var ts sql.NullTime
+		var trackName, artistName sql.NullString
+
+		err := rows.Scan(
+			&ts,
+			&record.MsPlayed,
+			&trackName,
+			&artistName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		if ts.Valid {
+			record.Ts = &ts.Time
+		}
+		record.MasterMetadataTrackName = trackName.String
+		record.MasterMetadataAlbumArtistName = artistName.String
+
+		audioRecords = append(audioRecords, record)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("row iteration error: %w", err)
+	}
+
+	return audioRecords, nil
+}

@@ -96,8 +96,24 @@ func main() {
 		duration := totalListeningTime.Round(time.Second)
 		days := duration.Hours() / 24.0
 		fmt.Printf("Lifetime listening time: %s (%.2f days)\n", duration, days)
-	}
+	case "lifetime-leaderboard":
+		audioRecords, err := fossildb.GetAllAudioRecords(db)
+		if err != nil {
+			panic(err)
+		}
 
+		leaderboard := statistics.GenerateAudioLeaderboard(audioRecords)
+
+		if len(leaderboard) > 0 {
+			fmt.Printf("Lifetime leaderboard:\n")
+			for index, entry := range leaderboard {
+				duration := entry.TimePlayed.Round(time.Second)
+				fmt.Printf("%d. %s - %s: %s\n", index+1, entry.TrackName, entry.ArtistName, duration)
+			}
+		} else {
+			fmt.Println("No data found.")
+		}
+	}
 }
 
 func parseAudioStreamingHistoryFile(filePath string) ([]records.AudioRecord, error) {

@@ -4,25 +4,55 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
+	fossildb "github.com/atbu/fossil/db"
 	"github.com/atbu/fossil/records"
 )
 
 func main() {
-	filePath := flag.String("file", "", "Path to the Spotify audio streaming history file")
-	flag.Parse()
-
-	if _, err := os.Stat(*filePath); os.IsNotExist(err) {
-		fmt.Printf("Error: File %s does not exist.\n", *filePath)
+	if len(os.Args) < 2 {
+		fmt.Println("Incorrect usage.") // TODO make this more user friendly
 		os.Exit(1)
 	}
 
-	songs, err := parseAudioStreamingHistoryFile(*filePath)
+	db, err := fossildb.InitDB("spotify_data.db")
 	if err != nil {
-		panic(err)
+		log.Fatalf("Database initialisation error: %v", err)
 	}
-	fmt.Printf("Successfully loaded %d records.\n", len(songs))
+	defer db.Close()
+
+	switch os.Args[1] {
+	case "import":
+		importCmd := flag.NewFlagSet("import", flag.ExitOnError)
+		importCmd.Parse(os.Args[2:])
+
+		if importCmd.NArg() < 1 {
+			fmt.Println("Error: missing JSON file path")
+			fmt.Println("Usage: fossil import <path-to-json>")
+			os.Exit(1)
+		}
+
+		filePath := importCmd.Arg(0)
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			fmt.Printf("Error: File %s does not exist.\n", filePath)
+			os.Exit(1)
+		}
+
+		audioRecords, err := parseAudioStreamingHistoryFile(filePath)
+		if err != nil {
+			panic(err)
+		}
+
+		totalInserted, skipped, err := fossildb.BulkInsertAudioRecords(db, audioRecords)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("Inserted %d rows and skipped %d rows.\n", totalInserted, skipped)
+	}
+
 }
 
 func parseAudioStreamingHistoryFile(filePath string) ([]records.AudioRecord, error) {
